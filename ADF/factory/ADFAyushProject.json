@@ -1,0 +1,9 @@
+{
+	"name": "ADFAyushProject",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "61194973-8b16-4e6a-84cd-f7f32b757e7b",
+		"tenantId": "01be1b83-7628-458f-b9e5-3a6cd56304ea"
+	}
+}

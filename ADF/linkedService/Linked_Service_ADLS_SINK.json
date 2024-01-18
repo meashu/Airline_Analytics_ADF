@@ -1,0 +1,22 @@
+{
+	"name": "Linked_Service_ADLS_SINK",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://ayushadlssink.dfs.core.windows.net/",
+			"tenant": "01be1b83-7628-458f-b9e5-3a6cd56304ea",
+			"servicePrincipalId": "88ec3ec0-d761-4110-9574-470cffd8caa7",
+			"servicePrincipalCredentialType": "ServicePrincipalKey",
+			"servicePrincipalCredential": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "Key_Vault_Ayush",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "data-app-secret"
+			}
+		}
+	}
+}

@@ -1,0 +1,106 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "ADFAyushProject"
+		},
+		"Linked_Service_Source_SQLDB_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'Linked_Service_Source_SQLDB'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=ayushsource.database.windows.net;Initial Catalog=Ayush_Source;User ID=ayush_source"
+		},
+		"Key_Vault_Ayush_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://KeyVaultAyushProject.vault.azure.net/"
+		},
+		"Linked_Service_ADLS_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://ayushadlsource.dfs.core.windows.net/"
+		},
+		"Linked_Service_ADLS_properties_typeProperties_tenant": {
+			"type": "string",
+			"defaultValue": "01be1b83-7628-458f-b9e5-3a6cd56304ea"
+		},
+		"Linked_Service_ADLS_properties_typeProperties_servicePrincipalId": {
+			"type": "string",
+			"defaultValue": "88ec3ec0-d761-4110-9574-470cffd8caa7"
+		},
+		"Linked_Service_ADLS_SINK_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://ayushadlssink.dfs.core.windows.net/"
+		},
+		"Linked_Service_ADLS_SINK_properties_typeProperties_tenant": {
+			"type": "string",
+			"defaultValue": "01be1b83-7628-458f-b9e5-3a6cd56304ea"
+		},
+		"Linked_Service_ADLS_SINK_properties_typeProperties_servicePrincipalId": {
+			"type": "string",
+			"defaultValue": "88ec3ec0-d761-4110-9574-470cffd8caa7"
+		},
+		"Linked_Service_REST_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": " https://airlabs.co/api/v9/airlines"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "ADFAyushProject_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"Linked_Service_Source_SQLDB_connectionString": {
+						"value": "[parameters('Linked_Service_Source_SQLDB_connectionString')]"
+					},
+					"Key_Vault_Ayush_properties_typeProperties_baseUrl": {
+						"value": "[parameters('Key_Vault_Ayush_properties_typeProperties_baseUrl')]"
+					},
+					"Linked_Service_REST_properties_typeProperties_url": {
+						"value": "[parameters('Linked_Service_REST_properties_typeProperties_url')]"
+					},
+					"Linked_Service_ADLS_properties_typeProperties_url": {
+						"value": "[parameters('Linked_Service_ADLS_properties_typeProperties_url')]"
+					},
+					"Linked_Service_ADLS_properties_typeProperties_tenant": {
+						"value": "[parameters('Linked_Service_ADLS_properties_typeProperties_tenant')]"
+					},
+					"Linked_Service_ADLS_properties_typeProperties_servicePrincipalId": {
+						"value": "[parameters('Linked_Service_ADLS_properties_typeProperties_servicePrincipalId')]"
+					},
+					"Linked_Service_ADLS_SINK_properties_typeProperties_url": {
+						"value": "[parameters('Linked_Service_ADLS_SINK_properties_typeProperties_url')]"
+					},
+					"Linked_Service_ADLS_SINK_properties_typeProperties_tenant": {
+						"value": "[parameters('Linked_Service_ADLS_SINK_properties_typeProperties_tenant')]"
+					},
+					"Linked_Service_ADLS_SINK_properties_typeProperties_servicePrincipalId": {
+						"value": "[parameters('Linked_Service_ADLS_SINK_properties_typeProperties_servicePrincipalId')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}

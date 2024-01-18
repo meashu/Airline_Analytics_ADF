@@ -1,0 +1,42 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "ADFAyushProject"
+		},
+		"Linked_Service_Source_SQLDB_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=ayushsource.database.windows.net;Initial Catalog=Ayush_Source;User ID=ayush_source"
+		},
+		"Key_Vault_Ayush_properties_typeProperties_baseUrl": {
+			"value": "https://KeyVaultAyushProject.vault.azure.net/"
+		},
+		"Linked_Service_ADLS_properties_typeProperties_url": {
+			"value": "https://ayushadlsource.dfs.core.windows.net/"
+		},
+		"Linked_Service_ADLS_properties_typeProperties_tenant": {
+			"value": "01be1b83-7628-458f-b9e5-3a6cd56304ea"
+		},
+		"Linked_Service_ADLS_properties_typeProperties_servicePrincipalId": {
+			"value": "88ec3ec0-d761-4110-9574-470cffd8caa7"
+		},
+		"Linked_Service_ADLS_SINK_properties_typeProperties_url": {
+			"value": "https://ayushadlssink.dfs.core.windows.net/"
+		},
+		"Linked_Service_ADLS_SINK_properties_typeProperties_tenant": {
+			"value": "01be1b83-7628-458f-b9e5-3a6cd56304ea"
+		},
+		"Linked_Service_ADLS_SINK_properties_typeProperties_servicePrincipalId": {
+			"value": "88ec3ec0-d761-4110-9574-470cffd8caa7"
+		},
+		"Linked_Service_REST_properties_typeProperties_url": {
+			"value": " https://airlabs.co/api/v9/airlines"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}

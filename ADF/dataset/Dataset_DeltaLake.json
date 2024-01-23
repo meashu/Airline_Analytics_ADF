@@ -10,7 +10,8 @@
 				"type": "string"
 			},
 			"databaseName": {
-				"type": "string"
+				"type": "string",
+				"defaultValue": "mart_ayush"
 			}
 		},
 		"annotations": [],

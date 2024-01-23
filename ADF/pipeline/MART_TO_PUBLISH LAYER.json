@@ -30,7 +30,7 @@
 						"referenceName": "Dataset_JSON_Source_Info",
 						"type": "DatasetReference",
 						"parameters": {
-							"fileName": "publish",
+							"fileName": "publish.json",
 							"container": "manualfiles"
 						}
 					},

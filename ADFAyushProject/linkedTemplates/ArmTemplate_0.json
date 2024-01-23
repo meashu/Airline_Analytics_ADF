@@ -12,6 +12,11 @@
 			"metadata": "Secure string for 'connectionString' of 'Linked_Service_Source_SQLDB'",
 			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=ayushsource.database.windows.net;Initial Catalog=Ayush_Source;User ID=ayush_source"
 		},
+		"Linked_Service_SQLDB_SINK_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'Linked_Service_SQLDB_SINK'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=ayushdev.database.windows.net;Initial Catalog=Ayush_DEV;User ID=ayush"
+		},
 		"Key_Vault_Ayush_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "https://KeyVaultAyushProject.vault.azure.net/"
@@ -173,6 +178,53 @@
 							"type": "LinkedServiceReference"
 						},
 						"secretName": "database-source-password"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Key_Vault_Ayush')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Linked_Service_DeltaLake')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricksDeltaLake",
+				"typeProperties": {
+					"domain": "https://adb-2834571953257430.10.azuredatabricks.net/",
+					"clusterId": "0122-175226-s98t1vx5",
+					"accessToken": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "Key_Vault_Ayush",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "databricks-token"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Key_Vault_Ayush')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Linked_Service_SQLDB_SINK')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('Linked_Service_SQLDB_SINK_connectionString')]",
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "Key_Vault_Ayush",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "sink-sqldb-pass"
 					}
 				}
 			},
@@ -468,6 +520,78 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/Dataset_DeltaLake')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Linked_Service_DeltaLake",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"tableName": {
+						"type": "string"
+					},
+					"databaseName": {
+						"type": "string",
+						"defaultValue": "mart_ayush"
+					}
+				},
+				"annotations": [],
+				"type": "AzureDatabricksDeltaLakeDataset",
+				"typeProperties": {
+					"database": {
+						"value": "@dataset().databaseName",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().tableName",
+						"type": "Expression"
+					}
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Linked_Service_DeltaLake')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dataset_Sink_SQLDB')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Linked_Service_SQLDB_SINK",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"tableName": {
+						"type": "string"
+					},
+					"databaseName": {
+						"type": "string",
+						"defaultValue": "dbo"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().databaseName",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().tableName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Linked_Service_SQLDB_SINK')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Copy data from REST to Sink')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -486,9 +610,9 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"url": "https://keyvaultayushproject.vault.azure.net/secrets/RESTapi-key/f84eaaffd07e446f9bac28317b755505?api-version=7.0",
 							"method": "GET",
 							"headers": {},
+							"url": "https://keyvaultayushproject.vault.azure.net/secrets/RESTapi-key/f84eaaffd07e446f9bac28317b755505?api-version=7.0",
 							"authentication": {
 								"type": "MSI",
 								"resource": "https://vault.azure.net"

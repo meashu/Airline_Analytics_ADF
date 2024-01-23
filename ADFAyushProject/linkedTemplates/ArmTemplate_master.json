@@ -12,6 +12,11 @@
 			"metadata": "Secure string for 'connectionString' of 'Linked_Service_Source_SQLDB'",
 			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=ayushsource.database.windows.net;Initial Catalog=Ayush_Source;User ID=ayush_source"
 		},
+		"Linked_Service_SQLDB_SINK_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'Linked_Service_SQLDB_SINK'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=ayushdev.database.windows.net;Initial Catalog=Ayush_DEV;User ID=ayush"
+		},
 		"Key_Vault_Ayush_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "https://KeyVaultAyushProject.vault.azure.net/"
@@ -74,6 +79,9 @@
 					"Linked_Service_Source_SQLDB_connectionString": {
 						"value": "[parameters('Linked_Service_Source_SQLDB_connectionString')]"
 					},
+					"Linked_Service_SQLDB_SINK_connectionString": {
+						"value": "[parameters('Linked_Service_SQLDB_SINK_connectionString')]"
+					},
 					"Key_Vault_Ayush_properties_typeProperties_baseUrl": {
 						"value": "[parameters('Key_Vault_Ayush_properties_typeProperties_baseUrl')]"
 					},
@@ -101,6 +109,26 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "ADFAyushProject_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'ADFAyushProject_ArmTemplate_0')]"
+			]
 		}
 	]
 }

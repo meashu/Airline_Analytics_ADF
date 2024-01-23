@@ -1,0 +1,16 @@
+{
+	"name": "Dataset_Sink_SQLDB",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Linked_Service_SQLDB_SINK",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "airport"
+		}
+	}
+}

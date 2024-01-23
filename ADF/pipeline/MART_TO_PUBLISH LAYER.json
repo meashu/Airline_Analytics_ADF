@@ -107,13 +107,29 @@
 							"inputs": [
 								{
 									"referenceName": "Dataset_DeltaLake",
-									"type": "DatasetReference"
+									"type": "DatasetReference",
+									"parameters": {
+										"tableName": {
+											"value": "@item().source_tableName",
+											"type": "Expression"
+										}
+									}
 								}
 							],
 							"outputs": [
 								{
 									"referenceName": "Dataset_Sink_SQLDB",
-									"type": "DatasetReference"
+									"type": "DatasetReference",
+									"parameters": {
+										"tableName": {
+											"value": "@item().publish_tableName",
+											"type": "Expression"
+										},
+										"databaseName": {
+											"value": "@item().databaseName",
+											"type": "Expression"
+										}
+									}
 								}
 							]
 						}

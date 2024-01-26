@@ -7,15 +7,15 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "ADFAyushProject"
 		},
-		"Linked_Service_Source_SQLDB_connectionString": {
-			"type": "secureString",
-			"metadata": "Secure string for 'connectionString' of 'Linked_Service_Source_SQLDB'",
-			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=ayushsource.database.windows.net;Initial Catalog=Ayush_Source;User ID=ayush_source"
-		},
 		"Linked_Service_SQLDB_SINK_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'Linked_Service_SQLDB_SINK'",
 			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=ayushdev.database.windows.net;Initial Catalog=Ayush_DEV;User ID=ayush"
+		},
+		"Linked_Service_Source_SQLDB_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'Linked_Service_Source_SQLDB'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=ayushsource.database.windows.net;Initial Catalog=Ayush_Source;User ID=ayush_source"
 		},
 		"Key_Vault_Ayush_properties_typeProperties_baseUrl": {
 			"type": "string",
@@ -163,22 +163,30 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Linked_Service_Source_SQLDB')]",
+			"name": "[concat(parameters('factoryName'), '/Linked_Service_Databricks')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"type": "AzureSqlDatabase",
+				"type": "AzureDatabricks",
 				"typeProperties": {
-					"connectionString": "[parameters('Linked_Service_Source_SQLDB_connectionString')]",
-					"password": {
+					"domain": "https://adb-2834571953257430.10.azuredatabricks.net/",
+					"accessToken": {
 						"type": "AzureKeyVaultSecret",
 						"store": {
 							"referenceName": "Key_Vault_Ayush",
 							"type": "LinkedServiceReference"
 						},
-						"secretName": "database-source-password"
-					}
+						"secretName": "databricks-token"
+					},
+					"newClusterNodeType": "Standard_DS3_v2",
+					"newClusterNumOfWorker": "1",
+					"newClusterSparkEnvVars": {
+						"PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+					},
+					"newClusterVersion": "11.3.x-scala2.12",
+					"clusterOption": "Fixed",
+					"newClusterInitScripts": []
 				}
 			},
 			"dependsOn": [
@@ -230,6 +238,112 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/Key_Vault_Ayush')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Linked_Service_Source_SQLDB')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('Linked_Service_Source_SQLDB_connectionString')]",
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "Key_Vault_Ayush",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "database-source-password"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Key_Vault_Ayush')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Refresh_Databricks_Notebook')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Notebook",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": "/ayush/Run_Notebooks",
+							"baseParameters": {
+								"Layer_Name": {
+									"value": "@pipeline().parameters.Layer_Name",
+									"type": "Expression"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "Linked_Service_Databricks",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"Layer_Name": {
+						"type": "string"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Linked_Service_Databricks')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dataset_DeltaLake')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Linked_Service_DeltaLake",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"tableName": {
+						"type": "string"
+					},
+					"databaseName": {
+						"type": "string",
+						"defaultValue": "mart_ayush"
+					}
+				},
+				"annotations": [],
+				"type": "AzureDatabricksDeltaLakeDataset",
+				"typeProperties": {
+					"database": {
+						"value": "@dataset().databaseName",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().tableName",
+						"type": "Expression"
+					}
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Linked_Service_DeltaLake')]"
 			]
 		},
 		{
@@ -318,6 +432,42 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/Linked_Service_ADLS_SINK')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dataset_Sink_SQLDB')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Linked_Service_SQLDB_SINK",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"tableName": {
+						"type": "string"
+					},
+					"databaseName": {
+						"type": "string",
+						"defaultValue": "dbo"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().databaseName",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().tableName",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Linked_Service_SQLDB_SINK')]"
 			]
 		},
 		{
@@ -520,78 +670,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Dataset_DeltaLake')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "Linked_Service_DeltaLake",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"tableName": {
-						"type": "string"
-					},
-					"databaseName": {
-						"type": "string",
-						"defaultValue": "mart_ayush"
-					}
-				},
-				"annotations": [],
-				"type": "AzureDatabricksDeltaLakeDataset",
-				"typeProperties": {
-					"database": {
-						"value": "@dataset().databaseName",
-						"type": "Expression"
-					},
-					"table": {
-						"value": "@dataset().tableName",
-						"type": "Expression"
-					}
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/Linked_Service_DeltaLake')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Dataset_Sink_SQLDB')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "Linked_Service_SQLDB_SINK",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"tableName": {
-						"type": "string"
-					},
-					"databaseName": {
-						"type": "string",
-						"defaultValue": "dbo"
-					}
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": {
-						"value": "@dataset().databaseName",
-						"type": "Expression"
-					},
-					"table": {
-						"value": "@dataset().tableName",
-						"type": "Expression"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/Linked_Service_SQLDB_SINK')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/Copy data from REST to Sink')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -708,400 +786,6 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/Dataset_Source_REST')]",
 				"[concat(variables('factoryId'), '/datasets/Dataset_JSON_Source_Info')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Data_copy from SQLDB to sink in parquet')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Lookup_Metadata_SQL",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "JsonSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "JsonReadSettings"
-								}
-							},
-							"dataset": {
-								"referenceName": "Dataset_JSON_Source_Info",
-								"type": "DatasetReference",
-								"parameters": {
-									"fileName": "Table_Source_Sql.json"
-								}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "ForEach",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Lookup_Metadata_SQL",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Lookup_Metadata_SQL').output.value",
-								"type": "Expression"
-							},
-							"activities": [
-								{
-									"name": "Copying data from SQL to Sink in parquet format",
-									"type": "Copy",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "AzureSqlSource",
-											"queryTimeout": "02:00:00",
-											"partitionOption": "None"
-										},
-										"sink": {
-											"type": "ParquetSink",
-											"storeSettings": {
-												"type": "AzureBlobFSWriteSettings"
-											},
-											"formatSettings": {
-												"type": "ParquetWriteSettings"
-											}
-										},
-										"enableStaging": false,
-										"parallelCopies": 1,
-										"dataIntegrationUnits": 2,
-										"translator": {
-											"type": "TabularTranslator",
-											"typeConversion": true,
-											"typeConversionSettings": {
-												"allowDataTruncation": true,
-												"treatBooleanAsNumber": false
-											}
-										}
-									},
-									"inputs": [
-										{
-											"referenceName": "Dataset_Source_SQLDB",
-											"type": "DatasetReference",
-											"parameters": {
-												"tableName": {
-													"value": "@item().tablename_source",
-													"type": "Expression"
-												},
-												"databaseName": "dbo"
-											}
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "SQL_Parquet_Sink",
-											"type": "DatasetReference",
-											"parameters": {}
-										}
-									]
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": [],
-				"lastPublishTime": "2024-01-18T17:56:19Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/Dataset_JSON_Source_Info')]",
-				"[concat(variables('factoryId'), '/datasets/Dataset_Source_SQLDB')]",
-				"[concat(variables('factoryId'), '/datasets/SQL_Parquet_Sink')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Data_copy from source to raw datalake')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Lookup_Metadata_JSON",
-						"description": "This lookup activity is taking the details from the JSON file we created where we have source and sink information",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "JsonSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "JsonReadSettings"
-								}
-							},
-							"dataset": {
-								"referenceName": "Dataset_JSON_Source_Info",
-								"type": "DatasetReference",
-								"parameters": {
-									"fileName": "Table_Source_Datalake.json",
-									"container": "manualfiles"
-								}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "ForEach-To traverse the json content",
-						"description": "This activity will traverse the json array and give the output as item()",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Lookup_Metadata_JSON",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Lookup_Metadata_JSON').output.value",
-								"type": "Expression"
-							},
-							"isSequential": false,
-							"activities": [
-								{
-									"name": "IF_CHECK_CSV_or_ZIP",
-									"description": "This activity will check the extension of file if it is csv or zip",
-									"type": "IfCondition",
-									"dependsOn": [],
-									"userProperties": [],
-									"typeProperties": {
-										"expression": {
-											"value": "@equals(split(item().Source_FileName,'.')[1],'csv')",
-											"type": "Expression"
-										},
-										"ifFalseActivities": [
-											{
-												"name": "Copy data to sink if the files are zipped",
-												"type": "Copy",
-												"dependsOn": [],
-												"policy": {
-													"timeout": "0.12:00:00",
-													"retry": 0,
-													"retryIntervalInSeconds": 30,
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"source": {
-														"type": "BinarySource",
-														"storeSettings": {
-															"type": "AzureBlobFSReadSettings",
-															"recursive": true
-														},
-														"formatSettings": {
-															"type": "BinaryReadSettings",
-															"compressionProperties": {
-																"type": "ZipDeflateReadSettings",
-																"preserveZipFileNameAsFolder": false
-															}
-														}
-													},
-													"sink": {
-														"type": "BinarySink",
-														"storeSettings": {
-															"type": "AzureBlobFSWriteSettings"
-														}
-													},
-													"enableStaging": false,
-													"parallelCopies": 1,
-													"dataIntegrationUnits": 2
-												},
-												"inputs": [
-													{
-														"referenceName": "Source_Binary",
-														"type": "DatasetReference",
-														"parameters": {
-															"containerName": {
-																"value": "@item().container_source",
-																"type": "Expression"
-															},
-															"fileName": {
-																"value": "@item().Source_FileName",
-																"type": "Expression"
-															}
-														}
-													}
-												],
-												"outputs": [
-													{
-														"referenceName": "Sink_Binary",
-														"type": "DatasetReference",
-														"parameters": {
-															"containerName": {
-																"value": "@item().container_sink",
-																"type": "Expression"
-															},
-															"directory": {
-																"value": "@concat(item().directory_sink,'/Date_Part=',formatDateTime(utcnow(),'yyyy-MM-dd'))",
-																"type": "Expression"
-															},
-															"fileName": {
-																"value": "@item().Sink_FileName",
-																"type": "Expression"
-															}
-														}
-													}
-												]
-											}
-										],
-										"ifTrueActivities": [
-											{
-												"name": "Copy data to sink if the file is csv",
-												"description": "It will copy the data from source to sink based on csv extension and store in hierarchy format based on datepart",
-												"type": "Copy",
-												"dependsOn": [],
-												"policy": {
-													"timeout": "0.12:00:00",
-													"retry": 0,
-													"retryIntervalInSeconds": 30,
-													"secureOutput": false,
-													"secureInput": false
-												},
-												"userProperties": [],
-												"typeProperties": {
-													"source": {
-														"type": "DelimitedTextSource",
-														"storeSettings": {
-															"type": "AzureBlobFSReadSettings",
-															"recursive": true,
-															"enablePartitionDiscovery": false
-														},
-														"formatSettings": {
-															"type": "DelimitedTextReadSettings"
-														}
-													},
-													"sink": {
-														"type": "DelimitedTextSink",
-														"storeSettings": {
-															"type": "AzureBlobFSWriteSettings"
-														},
-														"formatSettings": {
-															"type": "DelimitedTextWriteSettings",
-															"quoteAllText": true,
-															"fileExtension": ".txt"
-														}
-													},
-													"enableStaging": false,
-													"parallelCopies": 1,
-													"dataIntegrationUnits": 2,
-													"translator": {
-														"type": "TabularTranslator",
-														"typeConversion": true,
-														"typeConversionSettings": {
-															"allowDataTruncation": true,
-															"treatBooleanAsNumber": false
-														}
-													}
-												},
-												"inputs": [
-													{
-														"referenceName": "Dataset_Source",
-														"type": "DatasetReference",
-														"parameters": {
-															"container": {
-																"value": "@item().container_source",
-																"type": "Expression"
-															},
-															"directory": {
-																"value": "@item().directory_source",
-																"type": "Expression"
-															},
-															"filename": {
-																"value": "@item().Source_FileName",
-																"type": "Expression"
-															}
-														}
-													}
-												],
-												"outputs": [
-													{
-														"referenceName": "Dataset_SINK",
-														"type": "DatasetReference",
-														"parameters": {
-															"container": {
-																"value": "@item().container_sink",
-																"type": "Expression"
-															},
-															"directory": {
-																"value": "@concat(split(item().Sink_FileName,'.')[0],'/Date_Part=',formatDateTime(utcnow(),'yyyy-MM-dd'))",
-																"type": "Expression"
-															},
-															"filename": {
-																"value": "@item().Sink_FileName",
-																"type": "Expression"
-															}
-														}
-													}
-												]
-											}
-										]
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": [],
-				"lastPublishTime": "2024-01-18T17:56:19Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/Dataset_JSON_Source_Info')]",
-				"[concat(variables('factoryId'), '/datasets/Source_Binary')]",
-				"[concat(variables('factoryId'), '/datasets/Sink_Binary')]",
-				"[concat(variables('factoryId'), '/datasets/Dataset_Source')]",
-				"[concat(variables('factoryId'), '/datasets/Dataset_SINK')]"
 			]
 		}
 	]

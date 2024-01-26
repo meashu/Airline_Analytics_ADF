@@ -7,15 +7,15 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "ADFAyushProject"
 		},
-		"Linked_Service_Source_SQLDB_connectionString": {
-			"type": "secureString",
-			"metadata": "Secure string for 'connectionString' of 'Linked_Service_Source_SQLDB'",
-			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=ayushsource.database.windows.net;Initial Catalog=Ayush_Source;User ID=ayush_source"
-		},
 		"Linked_Service_SQLDB_SINK_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'Linked_Service_SQLDB_SINK'",
 			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=ayushdev.database.windows.net;Initial Catalog=Ayush_DEV;User ID=ayush"
+		},
+		"Linked_Service_Source_SQLDB_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'Linked_Service_Source_SQLDB'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=ayushsource.database.windows.net;Initial Catalog=Ayush_Source;User ID=ayush_source"
 		},
 		"Key_Vault_Ayush_properties_typeProperties_baseUrl": {
 			"type": "string",
@@ -76,11 +76,11 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
-					"Linked_Service_Source_SQLDB_connectionString": {
-						"value": "[parameters('Linked_Service_Source_SQLDB_connectionString')]"
-					},
 					"Linked_Service_SQLDB_SINK_connectionString": {
 						"value": "[parameters('Linked_Service_SQLDB_SINK_connectionString')]"
+					},
+					"Linked_Service_Source_SQLDB_connectionString": {
+						"value": "[parameters('Linked_Service_Source_SQLDB_connectionString')]"
 					},
 					"Key_Vault_Ayush_properties_typeProperties_baseUrl": {
 						"value": "[parameters('Key_Vault_Ayush_properties_typeProperties_baseUrl')]"

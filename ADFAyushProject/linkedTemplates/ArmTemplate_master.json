@@ -45,6 +45,10 @@
 			"type": "string",
 			"defaultValue": "88ec3ec0-d761-4110-9574-470cffd8caa7"
 		},
+		"Linked_Service_Databricks_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0122-175226-s98t1vx5"
+		},
 		"Linked_Service_REST_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": " https://airlabs.co/api/v9/airlines"
@@ -105,6 +109,9 @@
 					},
 					"Linked_Service_ADLS_SINK_properties_typeProperties_servicePrincipalId": {
 						"value": "[parameters('Linked_Service_ADLS_SINK_properties_typeProperties_servicePrincipalId')]"
+					},
+					"Linked_Service_Databricks_properties_typeProperties_existingClusterId": {
+						"value": "[parameters('Linked_Service_Databricks_properties_typeProperties_existingClusterId')]"
 					}
 				}
 			},

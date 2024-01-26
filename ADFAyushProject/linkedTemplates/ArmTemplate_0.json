@@ -48,6 +48,10 @@
 		"Linked_Service_ADLS_SINK_properties_typeProperties_servicePrincipalId": {
 			"type": "string",
 			"defaultValue": "88ec3ec0-d761-4110-9574-470cffd8caa7"
+		},
+		"Linked_Service_Databricks_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0122-175226-s98t1vx5"
 		}
 	},
 	"variables": {
@@ -179,14 +183,7 @@
 						},
 						"secretName": "databricks-token"
 					},
-					"newClusterNodeType": "Standard_DS3_v2",
-					"newClusterNumOfWorker": "1",
-					"newClusterSparkEnvVars": {
-						"PYSPARK_PYTHON": "/databricks/python3/bin/python3"
-					},
-					"newClusterVersion": "11.3.x-scala2.12",
-					"clusterOption": "Fixed",
-					"newClusterInitScripts": []
+					"existingClusterId": "[parameters('Linked_Service_Databricks_properties_typeProperties_existingClusterId')]"
 				}
 			},
 			"dependsOn": [
@@ -261,6 +258,50 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/Key_Vault_Ayush')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Manual_Run_Notebook')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Manual_Run_Notebook",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": {
+								"value": "@pipeline().parameters.Notebook_path",
+								"type": "Expression"
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "Linked_Service_Databricks",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"Notebook_path": {
+						"type": "string"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Linked_Service_Databricks')]"
 			]
 		},
 		{
@@ -667,125 +708,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/Linked_Service_ADLS')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Copy data from REST to Sink')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Web activity to  extract the data from REST API",
-						"type": "WebActivity",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": true,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"method": "GET",
-							"headers": {},
-							"url": "https://keyvaultayushproject.vault.azure.net/secrets/RESTapi-key/f84eaaffd07e446f9bac28317b755505?api-version=7.0",
-							"authentication": {
-								"type": "MSI",
-								"resource": "https://vault.azure.net"
-							}
-						}
-					},
-					{
-						"name": "Copy data from REST API to sink",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "Web activity to  extract the data from REST API",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "RestSource",
-								"httpRequestTimeout": "00:01:40",
-								"requestInterval": "00.00:00:00.010",
-								"requestMethod": "GET"
-							},
-							"sink": {
-								"type": "JsonSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "JsonWriteSettings"
-								}
-							},
-							"enableStaging": false,
-							"parallelCopies": 1,
-							"dataIntegrationUnits": 2,
-							"translator": {
-								"type": "TabularTranslator",
-								"mappings": [
-									{
-										"source": {
-											"path": "$['response']"
-										},
-										"sink": {
-											"path": "$['response']"
-										}
-									}
-								],
-								"collectionReference": ""
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "Dataset_Source_REST",
-								"type": "DatasetReference",
-								"parameters": {
-									"url": {
-										"value": "@activity('Web activity to  extract the data from REST API').output.value",
-										"type": "Expression"
-									}
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "Dataset_JSON_Source_Info",
-								"type": "DatasetReference",
-								"parameters": {
-									"fileName": {
-										"value": "@concat('airlines/Date_Part=',formatDateTime(utcnow(),'yyyy-MM-dd'),'/','airlines.json')",
-										"type": "Expression"
-									},
-									"container": "raw"
-								}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": [],
-				"lastPublishTime": "2024-01-18T17:56:19Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/Dataset_Source_REST')]",
-				"[concat(variables('factoryId'), '/datasets/Dataset_JSON_Source_Info')]"
 			]
 		}
 	]

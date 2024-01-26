@@ -45,6 +45,10 @@
 			"type": "string",
 			"defaultValue": "88ec3ec0-d761-4110-9574-470cffd8caa7"
 		},
+		"Linked_Service_Databricks_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0122-175226-s98t1vx5"
+		},
 		"Linked_Service_REST_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": " https://airlabs.co/api/v9/airlines"
@@ -718,6 +722,50 @@
 				"[concat(variables('factoryId'), '/datasets/Dataset_DeltaLake')]",
 				"[concat(variables('factoryId'), '/datasets/Dataset_Sink_SQLDB')]",
 				"[concat(variables('factoryId'), '/linkedServices/Linked_Service_ADLS_SINK')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Manual_Run_Notebook')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Manual_Run_Notebook",
+						"type": "DatabricksNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebookPath": {
+								"value": "@pipeline().parameters.Notebook_path",
+								"type": "Expression"
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "Linked_Service_Databricks",
+							"type": "LinkedServiceReference"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"Notebook_path": {
+						"type": "string"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Linked_Service_Databricks')]"
 			]
 		},
 		{
@@ -1420,14 +1468,7 @@
 						},
 						"secretName": "databricks-token"
 					},
-					"newClusterNodeType": "Standard_DS3_v2",
-					"newClusterNumOfWorker": "1",
-					"newClusterSparkEnvVars": {
-						"PYSPARK_PYTHON": "/databricks/python3/bin/python3"
-					},
-					"newClusterVersion": "11.3.x-scala2.12",
-					"clusterOption": "Fixed",
-					"newClusterInitScripts": []
+					"existingClusterId": "[parameters('Linked_Service_Databricks_properties_typeProperties_existingClusterId')]"
 				}
 			},
 			"dependsOn": [

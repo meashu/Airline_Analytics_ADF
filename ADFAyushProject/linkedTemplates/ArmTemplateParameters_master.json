@@ -11,6 +11,9 @@
 		"Linked_Service_Source_SQLDB_connectionString": {
 			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=ayushsource.database.windows.net;Initial Catalog=Ayush_Source;User ID=ayush_source"
 		},
+		"AzureBlobStorage1_properties_typeProperties_connectionString_secretName": {
+			"value": "blobs-source-connection"
+		},
 		"Key_Vault_Ayush_properties_typeProperties_baseUrl": {
 			"value": "https://KeyVaultAyushProject.vault.azure.net/"
 		},

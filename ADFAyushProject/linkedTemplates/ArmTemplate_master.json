@@ -17,6 +17,10 @@
 			"metadata": "Secure string for 'connectionString' of 'Linked_Service_Source_SQLDB'",
 			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=ayushsource.database.windows.net;Initial Catalog=Ayush_Source;User ID=ayush_source"
 		},
+		"AzureBlobStorage1_properties_typeProperties_connectionString_secretName": {
+			"type": "string",
+			"defaultValue": "blobs-source-connection"
+		},
 		"Key_Vault_Ayush_properties_typeProperties_baseUrl": {
 			"type": "string",
 			"defaultValue": "https://KeyVaultAyushProject.vault.azure.net/"
@@ -91,6 +95,9 @@
 					},
 					"Linked_Service_REST_properties_typeProperties_url": {
 						"value": "[parameters('Linked_Service_REST_properties_typeProperties_url')]"
+					},
+					"AzureBlobStorage1_properties_typeProperties_connectionString_secretName": {
+						"value": "[parameters('AzureBlobStorage1_properties_typeProperties_connectionString_secretName')]"
 					},
 					"Linked_Service_ADLS_properties_typeProperties_url": {
 						"value": "[parameters('Linked_Service_ADLS_properties_typeProperties_url')]"
